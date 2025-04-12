@@ -233,6 +233,11 @@
                 <artifactId>disease-common</artifactId>
                 <version>${disease.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.lz</groupId>
+                <artifactId>disease-manage</artifactId>
+                <version>${disease.version}</version>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>
@@ -244,6 +249,7 @@
         <module>disease-quartz</module>
         <module>disease-generator</module>
         <module>disease-common</module>
+        <module>disease-manage</module>
     </modules>
     <packaging>pom</packaging>
 

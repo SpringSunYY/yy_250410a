@@ -60,6 +60,10 @@
             <groupId>com.lz</groupId>
             <artifactId>disease-generator</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.lz</groupId>
+            <artifactId>disease-manage</artifactId>
+        </dependency>
 
     </dependencies>
 

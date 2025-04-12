@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lz.manage.mapper.DataBackupMapper">
+    
+    <resultMap type="DataBackup" id="DataBackupResult">
+        <result property="backupId"    column="backup_id"    />
+        <result property="backupTime"    column="backup_time"    />
+        <result property="backupContent"    column="backup_content"    />
+        <result property="createBy"    column="create_by"    />
+    </resultMap>
+
+    <sql id="selectDataBackupVo">
+        select backup_id, backup_time, backup_content, create_by from tb_data_backup
+    </sql>
+
+    <select id="selectDataBackupList" parameterType="DataBackup" resultMap="DataBackupResult">
+        <include refid="selectDataBackupVo"/>
+        <where>  
+            <if test="backupId != null "> and backup_id = #{backupId}</if>
+            <if test="params.beginBackupTime != null and params.beginBackupTime != '' and params.endBackupTime != null and params.endBackupTime != ''"> and DATE_FORMAT(backup_time, '%Y-%m-%d') between #{params.beginBackupTime} and #{params.endBackupTime}</if>
+            <if test="createBy != null  and createBy != ''"> and create_by like concat('%', #{createBy}, '%')</if>
+        </where>
+    </select>
+    
+    <select id="selectDataBackupByBackupId" parameterType="Long" resultMap="DataBackupResult">
+        <include refid="selectDataBackupVo"/>
+        where backup_id = #{backupId}
+    </select>
+
+    <insert id="insertDataBackup" parameterType="DataBackup" useGeneratedKeys="true" keyProperty="backupId">
+        insert into tb_data_backup
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="backupTime != null">backup_time,</if>
+            <if test="backupContent != null and backupContent != ''">backup_content,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="backupTime != null">#{backupTime},</if>
+            <if test="backupContent != null and backupContent != ''">#{backupContent},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDataBackup" parameterType="DataBackup">
+        update tb_data_backup
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="backupTime != null">backup_time = #{backupTime},</if>
+            <if test="backupContent != null and backupContent != ''">backup_content = #{backupContent},</if>
+            <if test="createBy != null and createBy != ''">create_by = #{createBy},</if>
+        </trim>
+        where backup_id = #{backupId}
+    </update>
+
+    <delete id="deleteDataBackupByBackupId" parameterType="Long">
+        delete from tb_data_backup where backup_id = #{backupId}
+    </delete>
+
+    <delete id="deleteDataBackupByBackupIds" parameterType="String">
+        delete from tb_data_backup where backup_id in 
+        <foreach item="backupId" collection="array" open="(" separator="," close=")">
+            #{backupId}
+        </foreach>
+    </delete>
+</mapper>
