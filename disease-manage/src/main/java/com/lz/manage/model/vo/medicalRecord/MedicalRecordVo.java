@@ -31,12 +31,14 @@ public class MedicalRecordVo implements Serializable {
      * 所属用户
      */
     @Excel(name = "所属用户")
+    private String userName;
     private Long userId;
 
     /**
      * 使用模板
      */
     @Excel(name = "使用模板")
+    private String templateName;
     private Long templateId;
 
     /**
@@ -67,6 +69,7 @@ public class MedicalRecordVo implements Serializable {
      * 所属部门
      */
     @Excel(name = "所属部门")
+    private String deptName;
     private Long deptId;
 
     /**

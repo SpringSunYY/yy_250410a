@@ -203,4 +203,15 @@ public interface ISysUserService
      * @return 结果
      */
     public String importUser(List<SysUser> userList, Boolean isUpdateSupport, String operName);
+
+    /**
+     * description: 不数据范围过滤
+     * author: YY
+     * method: myAllocatedList
+     * date: 2025/4/12 15:07
+     * param:
+     * param: user
+     * return: java.util.List<com.lz.common.core.domain.entity.SysUser>
+     **/
+    List<SysUser> myAllocatedList(SysUser user);
 }

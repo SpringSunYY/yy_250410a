@@ -5,11 +5,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+
+import com.lz.common.core.domain.entity.SysDept;
+import com.lz.common.core.domain.entity.SysUser;
+import com.lz.common.utils.SecurityUtils;
 import com.lz.common.utils.StringUtils;
+
 import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.lz.common.utils.DateUtils;
+
 import javax.annotation.Resource;
+
+import com.lz.manage.model.domain.TemplateInfo;
+import com.lz.manage.service.ITemplateInfoService;
+import com.lz.system.service.ISysDeptService;
+import com.lz.system.service.ISysUserService;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -21,93 +33,113 @@ import com.lz.manage.model.vo.medicalRecord.MedicalRecordVo;
 
 /**
  * 病历信息Service业务层处理
- * 
+ *
  * @author yy
  * @date 2025-04-12
  */
 @Service
-public class MedicalRecordServiceImpl extends ServiceImpl<MedicalRecordMapper, MedicalRecord> implements IMedicalRecordService
-{
+public class MedicalRecordServiceImpl extends ServiceImpl<MedicalRecordMapper, MedicalRecord> implements IMedicalRecordService {
     @Resource
     private MedicalRecordMapper medicalRecordMapper;
 
+    @Resource
+    private ISysUserService userService;
+
+    @Resource
+    private ISysDeptService deptService;
+
+    @Resource
+    private ITemplateInfoService templateInfoService;
     //region mybatis代码
+
     /**
      * 查询病历信息
-     * 
+     *
      * @param recordId 病历信息主键
      * @return 病历信息
      */
     @Override
-    public MedicalRecord selectMedicalRecordByRecordId(Long recordId)
-    {
+    public MedicalRecord selectMedicalRecordByRecordId(Long recordId) {
         return medicalRecordMapper.selectMedicalRecordByRecordId(recordId);
     }
 
     /**
      * 查询病历信息列表
-     * 
+     *
      * @param medicalRecord 病历信息
      * @return 病历信息
      */
     @Override
-    public List<MedicalRecord> selectMedicalRecordList(MedicalRecord medicalRecord)
-    {
-        return medicalRecordMapper.selectMedicalRecordList(medicalRecord);
+    public List<MedicalRecord> selectMedicalRecordList(MedicalRecord medicalRecord) {
+        List<MedicalRecord> medicalRecords = medicalRecordMapper.selectMedicalRecordList(medicalRecord);
+        for (MedicalRecord info : medicalRecords) {
+            SysUser user = userService.selectUserById(info.getUserId());
+            if (StringUtils.isNotNull(user)) {
+                info.setUserName(user.getUserName());
+            }
+            SysDept dept = deptService.selectDeptById(info.getDeptId());
+            if (StringUtils.isNotNull(dept)) {
+                info.setDeptName(dept.getDeptName());
+            }
+            TemplateInfo templateInfo = templateInfoService.selectTemplateInfoByTemplateId(info.getTemplateId());
+            if (StringUtils.isNotNull(templateInfo)) {
+                info.setTemplateName(templateInfo.getTemplateName());
+            }
+        }
+        return medicalRecords;
     }
 
     /**
      * 新增病历信息
-     * 
+     *
      * @param medicalRecord 病历信息
      * @return 结果
      */
     @Override
-    public int insertMedicalRecord(MedicalRecord medicalRecord)
-    {
+    public int insertMedicalRecord(MedicalRecord medicalRecord) {
+        medicalRecord.setCreateBy(SecurityUtils.getUsername());
+        medicalRecord.setDeptId(SecurityUtils.getDeptId());
         medicalRecord.setCreateTime(DateUtils.getNowDate());
         return medicalRecordMapper.insertMedicalRecord(medicalRecord);
     }
 
     /**
      * 修改病历信息
-     * 
+     *
      * @param medicalRecord 病历信息
      * @return 结果
      */
     @Override
-    public int updateMedicalRecord(MedicalRecord medicalRecord)
-    {
+    public int updateMedicalRecord(MedicalRecord medicalRecord) {
         medicalRecord.setUpdateTime(DateUtils.getNowDate());
         return medicalRecordMapper.updateMedicalRecord(medicalRecord);
     }
 
     /**
      * 批量删除病历信息
-     * 
+     *
      * @param recordIds 需要删除的病历信息主键
      * @return 结果
      */
     @Override
-    public int deleteMedicalRecordByRecordIds(Long[] recordIds)
-    {
+    public int deleteMedicalRecordByRecordIds(Long[] recordIds) {
         return medicalRecordMapper.deleteMedicalRecordByRecordIds(recordIds);
     }
 
     /**
      * 删除病历信息信息
-     * 
+     *
      * @param recordId 病历信息主键
      * @return 结果
      */
     @Override
-    public int deleteMedicalRecordByRecordId(Long recordId)
-    {
+    public int deleteMedicalRecordByRecordId(Long recordId) {
         return medicalRecordMapper.deleteMedicalRecordByRecordId(recordId);
     }
+
     //endregion
     @Override
-    public QueryWrapper<MedicalRecord> getQueryWrapper(MedicalRecordQuery medicalRecordQuery){
+    public QueryWrapper<MedicalRecord> getQueryWrapper(MedicalRecordQuery medicalRecordQuery) {
         QueryWrapper<MedicalRecord> queryWrapper = new QueryWrapper<>();
         //如果不使用params可以删除
         Map<String, Object> params = medicalRecordQuery.getParams();
@@ -115,37 +147,37 @@ public class MedicalRecordServiceImpl extends ServiceImpl<MedicalRecordMapper, M
             params = new HashMap<>();
         }
         Long recordId = medicalRecordQuery.getRecordId();
-        queryWrapper.eq( StringUtils.isNotNull(recordId),"record_id",recordId);
+        queryWrapper.eq(StringUtils.isNotNull(recordId), "record_id", recordId);
 
         Long userId = medicalRecordQuery.getUserId();
-        queryWrapper.eq( StringUtils.isNotNull(userId),"user_id",userId);
+        queryWrapper.eq(StringUtils.isNotNull(userId), "user_id", userId);
 
         Long templateId = medicalRecordQuery.getTemplateId();
-        queryWrapper.eq( StringUtils.isNotNull(templateId),"template_id",templateId);
+        queryWrapper.eq(StringUtils.isNotNull(templateId), "template_id", templateId);
 
         String recordTitle = medicalRecordQuery.getRecordTitle();
-        queryWrapper.like(StringUtils.isNotEmpty(recordTitle) ,"record_title",recordTitle);
+        queryWrapper.like(StringUtils.isNotEmpty(recordTitle), "record_title", recordTitle);
 
         String recordImage = medicalRecordQuery.getRecordImage();
-        queryWrapper.eq(StringUtils.isNotEmpty(recordImage) ,"record_image",recordImage);
+        queryWrapper.eq(StringUtils.isNotEmpty(recordImage), "record_image", recordImage);
 
         String content = medicalRecordQuery.getContent();
-        queryWrapper.eq(StringUtils.isNotEmpty(content) ,"content",content);
+        queryWrapper.eq(StringUtils.isNotEmpty(content), "content", content);
 
         Long level = medicalRecordQuery.getLevel();
-        queryWrapper.eq( StringUtils.isNotNull(level),"level",level);
+        queryWrapper.eq(StringUtils.isNotNull(level), "level", level);
 
         Long deptId = medicalRecordQuery.getDeptId();
-        queryWrapper.eq( StringUtils.isNotNull(deptId),"dept_id",deptId);
+        queryWrapper.eq(StringUtils.isNotNull(deptId), "dept_id", deptId);
 
         Date createTime = medicalRecordQuery.getCreateTime();
-        queryWrapper.between(StringUtils.isNotNull(params.get("beginCreateTime"))&&StringUtils.isNotNull(params.get("endCreateTime")),"create_time",params.get("beginCreateTime"),params.get("endCreateTime"));
+        queryWrapper.between(StringUtils.isNotNull(params.get("beginCreateTime")) && StringUtils.isNotNull(params.get("endCreateTime")), "create_time", params.get("beginCreateTime"), params.get("endCreateTime"));
 
         Date updateTime = medicalRecordQuery.getUpdateTime();
-        queryWrapper.between(StringUtils.isNotNull(params.get("beginUpdateTime"))&&StringUtils.isNotNull(params.get("endUpdateTime")),"update_time",params.get("beginUpdateTime"),params.get("endUpdateTime"));
+        queryWrapper.between(StringUtils.isNotNull(params.get("beginUpdateTime")) && StringUtils.isNotNull(params.get("endUpdateTime")), "update_time", params.get("beginUpdateTime"), params.get("endUpdateTime"));
 
         String isShared = medicalRecordQuery.getIsShared();
-        queryWrapper.eq(StringUtils.isNotEmpty(isShared) ,"is_shared",isShared);
+        queryWrapper.eq(StringUtils.isNotEmpty(isShared), "is_shared", isShared);
 
         return queryWrapper;
     }

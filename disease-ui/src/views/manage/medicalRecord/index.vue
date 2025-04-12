@@ -43,14 +43,14 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="所属部门" prop="deptId">
-        <el-input
-          v-model="queryParams.deptId"
-          placeholder="请输入所属部门"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
+      <!--      <el-form-item label="所属部门" prop="deptId">-->
+      <!--        <el-input-->
+      <!--          v-model="queryParams.deptId"-->
+      <!--          placeholder="请输入所属部门"-->
+      <!--          clearable-->
+      <!--          @keyup.enter.native="handleQuery"-->
+      <!--        />-->
+      <!--      </el-form-item>-->
       <el-form-item label="创建人" prop="createBy">
         <el-input
           v-model="queryParams.createBy"
@@ -81,16 +81,16 @@
           end-placeholder="结束日期"
         ></el-date-picker>
       </el-form-item>
-      <el-form-item label="是否共享" prop="isShared">
-        <el-select v-model="queryParams.isShared" placeholder="请选择是否共享" clearable>
-          <el-option
-            v-for="dict in dict.type.d_common_whether"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
+      <!--      <el-form-item label="是否共享" prop="isShared">-->
+      <!--        <el-select v-model="queryParams.isShared" placeholder="请选择是否共享" clearable>-->
+      <!--          <el-option-->
+      <!--            v-for="dict in dict.type.d_common_whether"-->
+      <!--            :key="dict.value"-->
+      <!--            :label="dict.label"-->
+      <!--            :value="dict.value"-->
+      <!--          />-->
+      <!--        </el-select>-->
+      <!--      </el-form-item>-->
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -151,10 +151,10 @@
       <el-table-column type="selection" width="55" align="center"/>
       <el-table-column label="病历编号" align="center" v-if="columns[0].visible" prop="recordId"/>
       <el-table-column label="所属用户" :show-overflow-tooltip="true" align="center" v-if="columns[1].visible"
-                       prop="userId"
+                       prop="userName"
       />
       <el-table-column label="使用模板" :show-overflow-tooltip="true" align="center" v-if="columns[2].visible"
-                       prop="templateId"
+                       prop="templateName"
       />
       <el-table-column label="病历标题" :show-overflow-tooltip="true" align="center" v-if="columns[3].visible"
                        prop="recordTitle"
@@ -173,7 +173,7 @@
         </template>
       </el-table-column>
       <el-table-column label="所属部门" :show-overflow-tooltip="true" align="center" v-if="columns[7].visible"
-                       prop="deptId"
+                       prop="deptName"
       />
       <el-table-column label="创建人" :show-overflow-tooltip="true" align="center" v-if="columns[8].visible"
                        prop="createBy"
@@ -230,10 +230,42 @@
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="所属用户" prop="userId">
-          <el-input v-model="form.userId" placeholder="请输入所属用户"/>
+          <el-select
+            v-model="form.userId"
+            filterable
+            remote
+            reserve-keyword
+            placeholder="请输入用户账号"
+            :remote-method="selectUserInfoList"
+            :loading="userLoading"
+          >
+            <el-option
+              v-for="item in userInfoList"
+              :key="item.userId"
+              :label="item.userName"
+              :value="item.userId"
+            >
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="使用模板" prop="templateId">
-          <el-input v-model="form.templateId" placeholder="请输入使用模板"/>
+          <el-select
+            v-model="form.templateId"
+            filterable
+            remote
+            reserve-keyword
+            placeholder="请输入模版名称"
+            :remote-method="selectTemplateInfoList"
+            :loading="templateLoading"
+          >
+            <el-option
+              v-for="item in templateInfoList"
+              :key="item.templateId"
+              :label="item.templateName"
+              :value="item.templateId"
+            >
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="病历标题" prop="recordTitle">
           <el-input v-model="form.recordTitle" placeholder="请输入病历标题"/>
@@ -253,9 +285,6 @@
             >{{ dict.label }}
             </el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="所属部门" prop="deptId">
-          <el-input v-model="form.deptId" placeholder="请输入所属部门"/>
         </el-form-item>
         <el-form-item label="是否共享" prop="isShared">
           <el-radio-group v-model="form.isShared">
@@ -287,27 +316,46 @@ import {
   addMedicalRecord,
   updateMedicalRecord
 } from '@/api/manage/medicalRecord'
+import { myAllocatedUserList } from '@/api/system/role'
+import { listTemplateInfo } from '@/api/manage/templateInfo'
 
 export default {
   name: 'MedicalRecord',
   dicts: ['d_level', 'd_common_whether'],
   data() {
     return {
+      //用户相关信息
+      userInfoList: [],
+      userLoading: false,
+      userQueryParams: {
+        userName: '',
+        roleId: 2,
+        pageNum: 1,
+        pageSize: 100
+      },
+      //模版相关信息
+      templateInfoList: [],
+      templateLoading: false,
+      templateQueryParams: {
+        templateName: '',
+        pageNum: 1,
+        pageSize: 100
+      },
       //表格展示列
       columns: [
-        { key: 0, label: '病历编号', visible: true },
+        { key: 0, label: '病历编号', visible: false },
         { key: 1, label: '所属用户', visible: true },
         { key: 2, label: '使用模板', visible: true },
         { key: 3, label: '病历标题', visible: true },
         { key: 4, label: '病历图片', visible: true },
         { key: 5, label: '病历内容', visible: true },
         { key: 6, label: '严重程度', visible: true },
-        { key: 7, label: '所属部门', visible: true },
+        { key: 7, label: '所属部门', visible: false },
         { key: 8, label: '创建人', visible: true },
         { key: 9, label: '创建时间', visible: true },
-        { key: 10, label: '更新时间', visible: true },
-        { key: 11, label: '是否共享', visible: true },
-        { key: 12, label: '备注', visible: true }
+        { key: 10, label: '更新时间', visible: false },
+        { key: 11, label: '是否共享', visible: false },
+        { key: 12, label: '备注', visible: false }
       ],
       // 遮罩层
       loading: true,
@@ -381,8 +429,82 @@ export default {
   },
   created() {
     this.getList()
+    this.getUserInfoList()
+    this.getTemplateInfoList()
   },
   methods: {
+    /**
+     * 获取用户列表推荐
+     * @param query
+     */
+    selectTemplateInfoList(query) {
+      if (query !== '') {
+        this.templateLoading = true
+        this.templateQueryParams.templateName = query
+        setTimeout(() => {
+          this.getTemplateInfoList()
+        }, 200)
+      } else {
+        this.templateInfoList = []
+        this.templateQueryParams.templateName = null
+      }
+    }
+    ,
+    /**
+     * 获取用户信息列表
+     */
+    getTemplateInfoList() {
+      //添加查询参数
+      if (this.form.userId != null) {
+        this.templateQueryParams.templateId = this.form.templateId
+      } else {
+        this.userQueryParams.templateId = null
+      }
+      if (this.templateQueryParams.templateName !== '') {
+        this.templateQueryParams.templateId = null
+      }
+      this.templateInfoList = []
+      listTemplateInfo(this.templateQueryParams).then(res => {
+        this.templateInfoList = res?.rows
+        this.templateLoading = false
+      })
+    },
+    /**
+     * 获取用户列表推荐
+     * @param query
+     */
+    selectUserInfoList(query) {
+      if (query !== '') {
+        this.userLoading = true
+        this.userQueryParams.userName = query
+        setTimeout(() => {
+          this.getUserInfoList()
+        }, 200)
+      } else {
+        this.userInfoList = []
+        this.userQueryParams.userName = null
+      }
+    }
+    ,
+    /**
+     * 获取用户信息列表
+     */
+    getUserInfoList() {
+      //添加查询参数
+      if (this.form.userId != null) {
+        this.userQueryParams.userId = this.form.userId
+      } else {
+        this.userQueryParams.userId = null
+      }
+      if (this.userQueryParams.userName !== '') {
+        this.userQueryParams.userId = null
+      }
+      this.userInfoList = []
+      myAllocatedUserList(this.userQueryParams).then(res => {
+        this.userInfoList = res?.rows
+        this.userLoading = false
+      })
+    },
     /** 查询病历信息列表 */
     getList() {
       this.loading = true
