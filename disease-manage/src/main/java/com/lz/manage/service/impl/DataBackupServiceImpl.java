@@ -5,10 +5,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+
+import com.alibaba.fastjson2.JSONObject;
 import com.lz.common.utils.StringUtils;
+
 import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
+
 import javax.annotation.Resource;
+
+import com.lz.manage.model.domain.MedicalRecord;
+import com.lz.manage.service.IMedicalRecordService;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -20,91 +28,89 @@ import com.lz.manage.model.vo.dataBackup.DataBackupVo;
 
 /**
  * 数据备份记录Service业务层处理
- * 
+ *
  * @author yy
  * @date 2025-04-12
  */
 @Service
-public class DataBackupServiceImpl extends ServiceImpl<DataBackupMapper, DataBackup> implements IDataBackupService
-{
+public class DataBackupServiceImpl extends ServiceImpl<DataBackupMapper, DataBackup> implements IDataBackupService {
     @Resource
     private DataBackupMapper dataBackupMapper;
 
+    @Resource
+    private IMedicalRecordService medicalRecordService;
+
     //region mybatis代码
+
     /**
      * 查询数据备份记录
-     * 
+     *
      * @param backupId 数据备份记录主键
      * @return 数据备份记录
      */
     @Override
-    public DataBackup selectDataBackupByBackupId(Long backupId)
-    {
+    public DataBackup selectDataBackupByBackupId(Long backupId) {
         return dataBackupMapper.selectDataBackupByBackupId(backupId);
     }
 
     /**
      * 查询数据备份记录列表
-     * 
+     *
      * @param dataBackup 数据备份记录
      * @return 数据备份记录
      */
     @Override
-    public List<DataBackup> selectDataBackupList(DataBackup dataBackup)
-    {
+    public List<DataBackup> selectDataBackupList(DataBackup dataBackup) {
         return dataBackupMapper.selectDataBackupList(dataBackup);
     }
 
     /**
      * 新增数据备份记录
-     * 
+     *
      * @param dataBackup 数据备份记录
      * @return 结果
      */
     @Override
-    public int insertDataBackup(DataBackup dataBackup)
-    {
+    public int insertDataBackup(DataBackup dataBackup) {
         return dataBackupMapper.insertDataBackup(dataBackup);
     }
 
     /**
      * 修改数据备份记录
-     * 
+     *
      * @param dataBackup 数据备份记录
      * @return 结果
      */
     @Override
-    public int updateDataBackup(DataBackup dataBackup)
-    {
+    public int updateDataBackup(DataBackup dataBackup) {
         return dataBackupMapper.updateDataBackup(dataBackup);
     }
 
     /**
      * 批量删除数据备份记录
-     * 
+     *
      * @param backupIds 需要删除的数据备份记录主键
      * @return 结果
      */
     @Override
-    public int deleteDataBackupByBackupIds(Long[] backupIds)
-    {
+    public int deleteDataBackupByBackupIds(Long[] backupIds) {
         return dataBackupMapper.deleteDataBackupByBackupIds(backupIds);
     }
 
     /**
      * 删除数据备份记录信息
-     * 
+     *
      * @param backupId 数据备份记录主键
      * @return 结果
      */
     @Override
-    public int deleteDataBackupByBackupId(Long backupId)
-    {
+    public int deleteDataBackupByBackupId(Long backupId) {
         return dataBackupMapper.deleteDataBackupByBackupId(backupId);
     }
+
     //endregion
     @Override
-    public QueryWrapper<DataBackup> getQueryWrapper(DataBackupQuery dataBackupQuery){
+    public QueryWrapper<DataBackup> getQueryWrapper(DataBackupQuery dataBackupQuery) {
         QueryWrapper<DataBackup> queryWrapper = new QueryWrapper<>();
         //如果不使用params可以删除
         Map<String, Object> params = dataBackupQuery.getParams();
@@ -112,13 +118,13 @@ public class DataBackupServiceImpl extends ServiceImpl<DataBackupMapper, DataBac
             params = new HashMap<>();
         }
         Long backupId = dataBackupQuery.getBackupId();
-        queryWrapper.eq( StringUtils.isNotNull(backupId),"backup_id",backupId);
+        queryWrapper.eq(StringUtils.isNotNull(backupId), "backup_id", backupId);
 
         Date backupTime = dataBackupQuery.getBackupTime();
-        queryWrapper.between(StringUtils.isNotNull(params.get("beginBackupTime"))&&StringUtils.isNotNull(params.get("endBackupTime")),"backup_time",params.get("beginBackupTime"),params.get("endBackupTime"));
+        queryWrapper.between(StringUtils.isNotNull(params.get("beginBackupTime")) && StringUtils.isNotNull(params.get("endBackupTime")), "backup_time", params.get("beginBackupTime"), params.get("endBackupTime"));
 
         String createBy = dataBackupQuery.getCreateBy();
-        queryWrapper.like(StringUtils.isNotEmpty(createBy) ,"create_by",createBy);
+        queryWrapper.like(StringUtils.isNotEmpty(createBy), "create_by", createBy);
 
         return queryWrapper;
     }
@@ -129,6 +135,17 @@ public class DataBackupServiceImpl extends ServiceImpl<DataBackupMapper, DataBac
             return Collections.emptyList();
         }
         return dataBackupList.stream().map(DataBackupVo::objToVo).collect(Collectors.toList());
+    }
+
+    @Override
+    public int restore(Long backupId) {
+        DataBackup dataBackup = dataBackupMapper.selectDataBackupByBackupId(backupId);
+        try {
+            MedicalRecord medicalRecord = JSONObject.parseObject(dataBackup.getBackupContent(), MedicalRecord.class);
+            return medicalRecordService.saveOrUpdate(medicalRecord) ? 1 : 0;
+        } catch (Exception e) {
+            throw new RuntimeException("数据恢复失败");
+        }
     }
 
 }

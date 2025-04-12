@@ -17,6 +17,13 @@ export function getDataBackup(backupId) {
   })
 }
 
+export function restore(backupId) {
+  return request({
+    url: '/manage/dataBackup/restore/' + backupId,
+    method: 'get'
+  })
+}
+
 // 新增数据备份记录
 export function addDataBackup(data) {
   return request({

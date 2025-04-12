@@ -284,7 +284,7 @@
           <image-upload v-model="form.recordImage"/>
         </el-form-item>
         <el-form-item label="病历内容">
-          <el-input type="textarea" v-model="form.content" :min-height="192"/>
+          <el-input type="textarea" :rows="5" v-model="form.content" :min-height="192"/>
         </el-form-item>
         <el-form-item label="严重程度" prop="level">
           <el-radio-group v-model="form.level">

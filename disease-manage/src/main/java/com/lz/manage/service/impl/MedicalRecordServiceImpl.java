@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.lz.common.core.domain.entity.SysDept;
 import com.lz.common.core.domain.entity.SysUser;
 import com.lz.common.utils.SecurityUtils;
@@ -18,8 +20,10 @@ import com.lz.common.utils.DateUtils;
 
 import javax.annotation.Resource;
 
+import com.lz.manage.model.domain.DataBackup;
 import com.lz.manage.model.domain.RecordReminder;
 import com.lz.manage.model.domain.TemplateInfo;
+import com.lz.manage.service.IDataBackupService;
 import com.lz.manage.service.IRecordReminderService;
 import com.lz.manage.service.ITemplateInfoService;
 import com.lz.system.service.ISysDeptService;
@@ -58,6 +62,9 @@ public class MedicalRecordServiceImpl extends ServiceImpl<MedicalRecordMapper, M
     @Resource
     @Lazy
     private IRecordReminderService recordReminderService;
+
+    @Resource
+    private IDataBackupService dataBackupService;
     //region mybatis代码
 
     /**
@@ -141,6 +148,21 @@ public class MedicalRecordServiceImpl extends ServiceImpl<MedicalRecordMapper, M
      */
     @Override
     public int deleteMedicalRecordByRecordIds(Long[] recordIds) {
+        List<MedicalRecord> list = this.list(new LambdaQueryWrapper<MedicalRecord>().in(MedicalRecord::getRecordId, (Object[]) recordIds));
+        if (StringUtils.isNotEmpty(list)) {
+            ArrayList<DataBackup> dataBackups = new ArrayList<>();
+            Date nowDate = DateUtils.getNowDate();
+            String username = SecurityUtils.getUsername();
+            list.forEach(info -> {
+                String jsonString = JSONObject.toJSONString(info);
+                DataBackup dataBackup = new DataBackup();
+                dataBackup.setBackupTime(nowDate);
+                dataBackup.setBackupContent(jsonString);
+                dataBackup.setCreateBy(username);
+                dataBackups.add(dataBackup);
+            });
+            dataBackupService.saveBatch(dataBackups);
+        }
         return medicalRecordMapper.deleteMedicalRecordByRecordIds(recordIds);
     }
 
@@ -243,5 +265,4 @@ public class MedicalRecordServiceImpl extends ServiceImpl<MedicalRecordMapper, M
         this.saveBatch(medicalRecordList);
         return StringUtils.format("成功导入{}条数据", medicalRecordList.size());
     }
-
 }

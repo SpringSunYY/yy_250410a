@@ -3,8 +3,11 @@ package com.lz.manage.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.security.access.prepost.PreAuthorize;
+
 import javax.annotation.Resource;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -34,8 +37,7 @@ import com.lz.common.core.page.TableDataInfo;
  */
 @RestController
 @RequestMapping("/manage/dataBackup")
-public class DataBackupController extends BaseController
-{
+public class DataBackupController extends BaseController {
     @Resource
     private IDataBackupService dataBackupService;
 
@@ -44,12 +46,11 @@ public class DataBackupController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('manage:dataBackup:list')")
     @GetMapping("/list")
-    public TableDataInfo list(DataBackupQuery dataBackupQuery)
-    {
+    public TableDataInfo list(DataBackupQuery dataBackupQuery) {
         DataBackup dataBackup = DataBackupQuery.queryToObj(dataBackupQuery);
         startPage();
         List<DataBackup> list = dataBackupService.selectDataBackupList(dataBackup);
-        List<DataBackupVo> listVo= list.stream().map(DataBackupVo::objToVo).collect(Collectors.toList());
+        List<DataBackupVo> listVo = list.stream().map(DataBackupVo::objToVo).collect(Collectors.toList());
         TableDataInfo table = getDataTable(list);
         table.setRows(listVo);
         return table;
@@ -61,8 +62,7 @@ public class DataBackupController extends BaseController
     @PreAuthorize("@ss.hasPermi('manage:dataBackup:export')")
     @Log(title = "数据备份记录", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, DataBackupQuery dataBackupQuery)
-    {
+    public void export(HttpServletResponse response, DataBackupQuery dataBackupQuery) {
         DataBackup dataBackup = DataBackupQuery.queryToObj(dataBackupQuery);
         List<DataBackup> list = dataBackupService.selectDataBackupList(dataBackup);
         ExcelUtil<DataBackup> util = new ExcelUtil<DataBackup>(DataBackup.class);
@@ -74,8 +74,7 @@ public class DataBackupController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('manage:dataBackup:query')")
     @GetMapping(value = "/{backupId}")
-    public AjaxResult getInfo(@PathVariable("backupId") Long backupId)
-    {
+    public AjaxResult getInfo(@PathVariable("backupId") Long backupId) {
         DataBackup dataBackup = dataBackupService.selectDataBackupByBackupId(backupId);
         return success(DataBackupVo.objToVo(dataBackup));
     }
@@ -86,8 +85,7 @@ public class DataBackupController extends BaseController
     @PreAuthorize("@ss.hasPermi('manage:dataBackup:add')")
     @Log(title = "数据备份记录", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody DataBackupInsert dataBackupInsert)
-    {
+    public AjaxResult add(@RequestBody DataBackupInsert dataBackupInsert) {
         DataBackup dataBackup = DataBackupInsert.insertToObj(dataBackupInsert);
         return toAjax(dataBackupService.insertDataBackup(dataBackup));
     }
@@ -98,8 +96,7 @@ public class DataBackupController extends BaseController
     @PreAuthorize("@ss.hasPermi('manage:dataBackup:edit')")
     @Log(title = "数据备份记录", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody DataBackupEdit dataBackupEdit)
-    {
+    public AjaxResult edit(@RequestBody DataBackupEdit dataBackupEdit) {
         DataBackup dataBackup = DataBackupEdit.editToObj(dataBackupEdit);
         return toAjax(dataBackupService.updateDataBackup(dataBackup));
     }
@@ -109,9 +106,16 @@ public class DataBackupController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('manage:dataBackup:remove')")
     @Log(title = "数据备份记录", businessType = BusinessType.DELETE)
-	@DeleteMapping("/{backupIds}")
-    public AjaxResult remove(@PathVariable Long[] backupIds)
-    {
+    @DeleteMapping("/{backupIds}")
+    public AjaxResult remove(@PathVariable Long[] backupIds) {
         return toAjax(dataBackupService.deleteDataBackupByBackupIds(backupIds));
+    }
+
+    @PreAuthorize("@ss.hasPermi('manage:medicalRecord:add')")
+    @Log(title = "恢复数据被封", businessType = BusinessType.INSERT)
+    @GetMapping("/restore/{backupId}")
+    public AjaxResult restore(@PathVariable("backupId") Long backupId) {
+
+        return success(dataBackupService.restore(backupId));
     }
 }
