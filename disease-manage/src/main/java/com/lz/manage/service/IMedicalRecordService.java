@@ -1,24 +1,26 @@
 package com.lz.manage.service;
 
 import java.util.List;
+
 import com.lz.manage.model.domain.MedicalRecord;
 import com.lz.manage.model.vo.medicalRecord.MedicalRecordVo;
 import com.lz.manage.model.dto.medicalRecord.MedicalRecordQuery;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+
 /**
  * 病历信息Service接口
- * 
+ *
  * @author yy
  * @date 2025-04-12
  */
-public interface IMedicalRecordService extends IService<MedicalRecord>
-{
+public interface IMedicalRecordService extends IService<MedicalRecord> {
     //region mybatis代码
+
     /**
      * 查询病历信息
-     * 
+     *
      * @param recordId 病历信息主键
      * @return 病历信息
      */
@@ -26,7 +28,7 @@ public interface IMedicalRecordService extends IService<MedicalRecord>
 
     /**
      * 查询病历信息列表
-     * 
+     *
      * @param medicalRecord 病历信息
      * @return 病历信息集合
      */
@@ -34,7 +36,7 @@ public interface IMedicalRecordService extends IService<MedicalRecord>
 
     /**
      * 新增病历信息
-     * 
+     *
      * @param medicalRecord 病历信息
      * @return 结果
      */
@@ -42,7 +44,7 @@ public interface IMedicalRecordService extends IService<MedicalRecord>
 
     /**
      * 修改病历信息
-     * 
+     *
      * @param medicalRecord 病历信息
      * @return 结果
      */
@@ -50,7 +52,7 @@ public interface IMedicalRecordService extends IService<MedicalRecord>
 
     /**
      * 批量删除病历信息
-     * 
+     *
      * @param recordIds 需要删除的病历信息主键集合
      * @return 结果
      */
@@ -58,12 +60,13 @@ public interface IMedicalRecordService extends IService<MedicalRecord>
 
     /**
      * 删除病历信息信息
-     * 
+     *
      * @param recordId 病历信息主键
      * @return 结果
      */
     public int deleteMedicalRecordByRecordId(Long recordId);
     //endregion
+
     /**
      * 获取查询条件
      *
@@ -79,4 +82,15 @@ public interface IMedicalRecordService extends IService<MedicalRecord>
      * @return MedicalRecordVO集合
      */
     List<MedicalRecordVo> convertVoList(List<MedicalRecord> medicalRecordList);
+
+    /**
+     * description: 导入病历数据
+     * author: YY
+     * method: importMedicalRecord
+     * date: 2025/4/12 15:33
+     * param:
+     * param: medicalRecordList
+     * return: java.lang.String
+     **/
+    String importMedicalRecord(List<MedicalRecord> medicalRecordList);
 }

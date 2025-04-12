@@ -30,6 +30,7 @@ import com.lz.manage.model.domain.MedicalRecord;
 import com.lz.manage.service.IMedicalRecordService;
 import com.lz.manage.model.dto.medicalRecord.MedicalRecordQuery;
 import com.lz.manage.model.vo.medicalRecord.MedicalRecordVo;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 病历信息Service业务层处理
@@ -188,6 +189,42 @@ public class MedicalRecordServiceImpl extends ServiceImpl<MedicalRecordMapper, M
             return Collections.emptyList();
         }
         return medicalRecordList.stream().map(MedicalRecordVo::objToVo).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public String importMedicalRecord(List<MedicalRecord> medicalRecordList) {
+        //数据校验
+        if (StringUtils.isEmpty(medicalRecordList)) {
+            return "数据不能为空";
+        }
+        String username = SecurityUtils.getUsername();
+        Date nowDate = DateUtils.getNowDate();
+        Long deptId = SecurityUtils.getDeptId();
+        for (int i = 0; i < medicalRecordList.size(); i++) {
+            int index = i + 1;
+            MedicalRecord info = medicalRecordList.get(i);
+            if (StringUtils.isNull(info.getUserId())) {
+                return StringUtils.format("第{}行，所属用户不能为空", index);
+            }
+            if (StringUtils.isNull(info.getTemplateId())) {
+                return StringUtils.format("第{}行，所属模板不能为空", index);
+            }
+            if (StringUtils.isNull(info.getRecordTitle())) {
+                return StringUtils.format("第{}行，病历标题不能为空", index);
+            }
+            if (StringUtils.isNull(info.getLevel())) {
+                return StringUtils.format("第{}行，严重程度不能为空", index);
+            }
+            if (StringUtils.isNull(info.getIsShared())) {
+                return StringUtils.format("第{}行，是否共享不能为空", index);
+            }
+            info.setCreateBy(username);
+            info.setCreateTime(nowDate);
+            info.setDeptId(deptId);
+        }
+        this.saveBatch(medicalRecordList);
+        return StringUtils.format("成功导入{}条数据", medicalRecordList.size());
     }
 
 }

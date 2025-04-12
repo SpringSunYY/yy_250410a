@@ -25,6 +25,7 @@ import com.lz.manage.model.dto.medicalRecord.MedicalRecordEdit;
 import com.lz.manage.service.IMedicalRecordService;
 import com.lz.common.utils.poi.ExcelUtil;
 import com.lz.common.core.page.TableDataInfo;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 病历信息Controller
@@ -113,5 +114,22 @@ public class MedicalRecordController extends BaseController
     public AjaxResult remove(@PathVariable Long[] recordIds)
     {
         return toAjax(medicalRecordService.deleteMedicalRecordByRecordIds(recordIds));
+    }
+
+    @PreAuthorize("@ss.hasPermi('manage:medicalRecord:import')")
+    @Log(title = "导入病历", businessType = BusinessType.IMPORT)
+    @PostMapping("/importData")
+    public AjaxResult importData(MultipartFile file) throws Exception {
+        ExcelUtil<MedicalRecord> util = new ExcelUtil<MedicalRecord>(MedicalRecord.class);
+        List<MedicalRecord> storeInfoList = util.importExcel(file.getInputStream());
+        String message = medicalRecordService.importMedicalRecord(storeInfoList);
+        return success(message);
+    }
+
+    @PreAuthorize("@ss.hasPermi('manage:medicalRecord:import')")
+    @PostMapping("/importTemplate")
+    public void importTemplate(HttpServletResponse response) {
+        ExcelUtil<MedicalRecord> util = new ExcelUtil<MedicalRecord>(MedicalRecord.class);
+        util.importTemplateExcel(response, "病历数据");
     }
 }
