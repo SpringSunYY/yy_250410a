@@ -1,33 +1,38 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
-PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lz.manage.mapper.RecordReminderMapper">
-    
+
     <resultMap type="RecordReminder" id="RecordReminderResult">
-        <result property="reminderId"    column="reminder_id"    />
-        <result property="recordId"    column="record_id"    />
-        <result property="remindTime"    column="remind_time"    />
-        <result property="message"    column="message"    />
-        <result property="isRead"    column="is_read"    />
-        <result property="remark"    column="remark"    />
+        <result property="reminderId" column="reminder_id"/>
+        <result property="recordId" column="record_id"/>
+        <result property="remindTime" column="remind_time"/>
+        <result property="message" column="message"/>
+        <result property="userId" column="user_id"/>
+        <result property="isRead" column="is_read"/>
+        <result property="remark" column="remark"/>
     </resultMap>
 
     <sql id="selectRecordReminderVo">
-        select reminder_id, record_id, remind_time, message, is_read, remark from tb_record_reminder
+        select reminder_id, record_id, remind_time, message, user_id, is_read, remark
+        from tb_record_reminder
     </sql>
 
     <select id="selectRecordReminderList" parameterType="RecordReminder" resultMap="RecordReminderResult">
         <include refid="selectRecordReminderVo"/>
-        <where>  
-            <if test="reminderId != null "> and reminder_id = #{reminderId}</if>
-            <if test="recordId != null "> and record_id = #{recordId}</if>
-            <if test="params.beginRemindTime != null and params.beginRemindTime != '' and params.endRemindTime != null and params.endRemindTime != ''"> and DATE_FORMAT(remind_time, '%Y-%m-%d') between #{params.beginRemindTime} and #{params.endRemindTime}</if>
-            <if test="message != null  and message != ''"> and message = #{message}</if>
-            <if test="isRead != null  and isRead != ''"> and is_read = #{isRead}</if>
+        <where>
+            <if test="reminderId != null ">and reminder_id = #{reminderId}</if>
+            <if test="recordId != null ">and record_id = #{recordId}</if>
+            <if test="params.beginRemindTime != null and params.beginRemindTime != '' and params.endRemindTime != null and params.endRemindTime != ''">
+                and DATE_FORMAT(remind_time, '%Y-%m-%d') between #{params.beginRemindTime} and #{params.endRemindTime}
+            </if>
+            <if test="message != null  and message != ''">and message = #{message}</if>
+            <if test="userId != null ">and user_id = #{userId}</if>
+            <if test="isRead != null  and isRead != ''">and is_read = #{isRead}</if>
         </where>
     </select>
-    
+
     <select id="selectRecordReminderByReminderId" parameterType="Long" resultMap="RecordReminderResult">
         <include refid="selectRecordReminderVo"/>
         where reminder_id = #{reminderId}
@@ -39,16 +44,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="recordId != null">record_id,</if>
             <if test="remindTime != null">remind_time,</if>
             <if test="message != null and message != ''">message,</if>
+            <if test="userId != null">user_id,</if>
             <if test="isRead != null and isRead != ''">is_read,</if>
             <if test="remark != null">remark,</if>
-         </trim>
+        </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="recordId != null">#{recordId},</if>
             <if test="remindTime != null">#{remindTime},</if>
             <if test="message != null and message != ''">#{message},</if>
+            <if test="userId != null">#{userId},</if>
             <if test="isRead != null and isRead != ''">#{isRead},</if>
             <if test="remark != null">#{remark},</if>
-         </trim>
+        </trim>
     </insert>
 
     <update id="updateRecordReminder" parameterType="RecordReminder">
@@ -57,6 +64,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="recordId != null">record_id = #{recordId},</if>
             <if test="remindTime != null">remind_time = #{remindTime},</if>
             <if test="message != null and message != ''">message = #{message},</if>
+            <if test="userId != null">user_id = #{userId},</if>
             <if test="isRead != null and isRead != ''">is_read = #{isRead},</if>
             <if test="remark != null">remark = #{remark},</if>
         </trim>
@@ -64,11 +72,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </update>
 
     <delete id="deleteRecordReminderByReminderId" parameterType="Long">
-        delete from tb_record_reminder where reminder_id = #{reminderId}
+        delete
+        from tb_record_reminder
+        where reminder_id = #{reminderId}
     </delete>
 
     <delete id="deleteRecordReminderByReminderIds" parameterType="String">
-        delete from tb_record_reminder where reminder_id in 
+        delete from tb_record_reminder where reminder_id in
         <foreach item="reminderId" collection="array" open="(" separator="," close=")">
             #{reminderId}
         </foreach>

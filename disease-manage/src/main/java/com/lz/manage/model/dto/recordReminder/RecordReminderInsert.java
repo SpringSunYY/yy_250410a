@@ -2,10 +2,12 @@ package com.lz.manage.model.dto.recordReminder;
 
 import java.io.Serializable;
 import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 import com.lz.manage.model.domain.RecordReminder;
+
 /**
  * 病历提醒Vo对象 tb_record_reminder
  *
@@ -13,27 +15,43 @@ import com.lz.manage.model.domain.RecordReminder;
  * @date 2025-04-12
  */
 @Data
-public class RecordReminderInsert implements Serializable
-{
+public class RecordReminderInsert implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /** 提醒编号 */
+    /**
+     * 提醒编号
+     */
     private Long reminderId;
 
-    /** 关联病历 */
+    /**
+     * 关联病历
+     */
     private Long recordId;
 
-    /** 提醒时间 */
+    /**
+     * 提醒时间
+     */
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date remindTime;
 
-    /** 提醒内容 */
+    /**
+     * 提醒内容
+     */
     private String message;
 
-    /** 已读（0否 1是） */
+    /**
+     * 用户
+     */
+    private Long userId;
+
+    /**
+     * 已读（0否 1是）
+     */
     private String isRead;
 
-    /** 备注 */
+    /**
+     * 备注
+     */
     private String remark;
 
     /**

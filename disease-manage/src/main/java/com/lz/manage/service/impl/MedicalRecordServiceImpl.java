@@ -18,10 +18,13 @@ import com.lz.common.utils.DateUtils;
 
 import javax.annotation.Resource;
 
+import com.lz.manage.model.domain.RecordReminder;
 import com.lz.manage.model.domain.TemplateInfo;
+import com.lz.manage.service.IRecordReminderService;
 import com.lz.manage.service.ITemplateInfoService;
 import com.lz.system.service.ISysDeptService;
 import com.lz.system.service.ISysUserService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -51,6 +54,10 @@ public class MedicalRecordServiceImpl extends ServiceImpl<MedicalRecordMapper, M
 
     @Resource
     private ITemplateInfoService templateInfoService;
+
+    @Resource
+    @Lazy
+    private IRecordReminderService recordReminderService;
     //region mybatis代码
 
     /**
@@ -100,8 +107,18 @@ public class MedicalRecordServiceImpl extends ServiceImpl<MedicalRecordMapper, M
     public int insertMedicalRecord(MedicalRecord medicalRecord) {
         medicalRecord.setCreateBy(SecurityUtils.getUsername());
         medicalRecord.setDeptId(SecurityUtils.getDeptId());
-        medicalRecord.setCreateTime(DateUtils.getNowDate());
-        return medicalRecordMapper.insertMedicalRecord(medicalRecord);
+        Date nowDate = DateUtils.getNowDate();
+        medicalRecord.setCreateTime(nowDate);
+
+        medicalRecordMapper.insertMedicalRecord(medicalRecord);
+        //创建提醒
+        RecordReminder recordReminder = new RecordReminder();
+        recordReminder.setRecordId(medicalRecord.getRecordId());
+        recordReminder.setRemindTime(nowDate);
+        recordReminder.setMessage(StringUtils.format("您有新的病历--{}，请及时查看！", medicalRecord.getRecordTitle()));
+        recordReminder.setUserId(medicalRecord.getUserId());
+        recordReminder.setIsRead("0");
+        return recordReminderService.insertRecordReminder(recordReminder);
     }
 
     /**
