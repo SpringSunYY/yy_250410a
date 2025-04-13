@@ -108,6 +108,8 @@ public class MedicalRecord implements Serializable {
      */
     @Excel(name = "是否共享", readConverterExp = "0=否,1=是")
     private String isShared;
+    @TableField(exist = false)
+    private String orShared;
 
     /**
      * 备注

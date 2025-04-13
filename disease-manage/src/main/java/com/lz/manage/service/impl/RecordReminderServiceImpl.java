@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import com.lz.common.core.domain.entity.SysUser;
+import com.lz.common.utils.SecurityUtils;
 import com.lz.common.utils.StringUtils;
 
 import java.util.Date;
@@ -64,6 +65,9 @@ public class RecordReminderServiceImpl extends ServiceImpl<RecordReminderMapper,
      */
     @Override
     public List<RecordReminder> selectRecordReminderList(RecordReminder recordReminder) {
+        if (SecurityUtils.hasRole("common")&&!SecurityUtils.hasRole("admin")) {
+            recordReminder.setUserId(SecurityUtils.getUserId());
+        }
         List<RecordReminder> recordReminders = recordReminderMapper.selectRecordReminderList(recordReminder);
         for (RecordReminder info : recordReminders) {
             SysUser user = userService.selectUserById(info.getUserId());

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.lz.common.annotation.DataScope;
 import com.lz.common.core.domain.entity.SysDept;
 import com.lz.common.core.domain.entity.SysUser;
 import com.lz.common.utils.SecurityUtils;
@@ -86,6 +87,12 @@ public class MedicalRecordServiceImpl extends ServiceImpl<MedicalRecordMapper, M
      */
     @Override
     public List<MedicalRecord> selectMedicalRecordList(MedicalRecord medicalRecord) {
+        if (SecurityUtils.hasRole("common") && !SecurityUtils.hasRole("admin")) {
+            medicalRecord.setUserId(SecurityUtils.getUserId());
+        } else if (SecurityUtils.hasRole("doctor") && !SecurityUtils.hasRole("admin")) {
+            medicalRecord.setDeptId(SecurityUtils.getDeptId());
+            medicalRecord.setOrShared("1");
+        }
         List<MedicalRecord> medicalRecords = medicalRecordMapper.selectMedicalRecordList(medicalRecord);
         for (MedicalRecord info : medicalRecords) {
             SysUser user = userService.selectUserById(info.getUserId());

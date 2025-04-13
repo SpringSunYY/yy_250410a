@@ -58,6 +58,7 @@
                 and DATE_FORMAT(update_time, '%Y-%m-%d') between #{params.beginUpdateTime} and #{params.endUpdateTime}
             </if>
             <if test="isShared != null  and isShared != ''">and is_shared = #{isShared}</if>
+            <if test="orShared != null">and 1=1 or is_shared = #{orShared}</if>
         </where>
     </select>
 

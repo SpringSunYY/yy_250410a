@@ -60,6 +60,7 @@ import RuoYiGit from '@/components/RuoYi/Git'
 import RuoYiDoc from '@/components/RuoYi/Doc'
 import { listRecordReminder, updateRecordReminder } from '@/api/manage/recordReminder'
 import { Notification } from 'element-ui'
+import { checkPermi } from '@/utils/permission'
 
 export default {
   components: {
@@ -107,7 +108,9 @@ export default {
     }
   },
   created() {
-    this.getRemindInfo()
+    if (checkPermi(['manage:recordReminder:query'])) {
+      this.getRemindInfo()
+    }
   },
   methods: {
     getRemindInfo() {
